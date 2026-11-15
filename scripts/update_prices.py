@@ -154,7 +154,7 @@ def build_catalog(items):
     return sorted(result, key=lambda x: (x[1].casefold(), x[2].casefold(), x[0]))
 
 
-def import_data(catalog_source, guide_source, rate=None, uk_best=None, uk_links=None):
+def import_data(catalog_source, guide_source, rate=None, uk_best=None, uk_links=None, uk_provider=None):
     cards = build_catalog(catalog_source.get("products", []))
     guides = guide_source.get("priceGuides", [])
     if len(cards) < 10000 or len(guides) < 10000:
@@ -223,6 +223,7 @@ def import_data(catalog_source, guide_source, rate=None, uk_best=None, uk_links=
         "shards": SHARDS,
         "reference": "Cardmarket daily EU-wide low (any language, any condition)",
         "uk_definition": "Lowest supplied, available, English-language offer from a GB seller; postage not included",
+        "uk_provider": uk_provider or {"status": "No active UK marketplace data provider"},
     })
     print(f"Imported {len(cards):,} printings; {matched:,} guide matches; "
           f"{len(uk_best):,} qualifying UK offers; source {day}")
@@ -237,7 +238,23 @@ def main():
         print(f"FX source unavailable; displaying EUR only ({exc})")
         rate = None
     offers, links = verified_uk_offers()
-    import_data(catalogue, guide, rate=rate, uk_best=offers, uk_links=links)
+    provider = {"status": "No active UK marketplace data provider"}
+    token = os.environ.get("CARDTRADER_API_TOKEN", "").strip()
+    approved = os.environ.get("CARDTRADER_MARKET_API_APPROVED", "").strip().lower() in ("true", "yes", "1")
+    if token and approved:
+        from cardtrader_uk import scan_uk_offers
+        known_ids = {str(item["idProduct"]) for item in catalogue.get("products", []) if "idProduct" in item}
+        live, details, provider = scan_uk_offers(
+            token, rate.get("rate") if rate else None, ROOT, known_ids
+        )
+        for pair, gbp in live.items():
+            if pair not in offers or gbp < offers[pair]:
+                offers[pair] = gbp
+                links[pair] = details[pair]
+    elif token and not approved:
+        print("CardTrader token present but market-data permission not marked approved: skipping.")
+    import_data(catalogue, guide, rate=rate, uk_best=offers,
+                uk_links=links, uk_provider=provider)
 
 
 if __name__ == "__main__":
