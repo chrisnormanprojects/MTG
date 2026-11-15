@@ -1,12 +1,12 @@
 "use strict";
 const $ = id => document.getElementById(id);
-const money = (minor, currency="GBP") => minor == null ? "—" :
-  new Intl.NumberFormat("en-GB", {style:"currency",currency,maximumFractionDigits:2}).format(minor/100);
+const money = minor => minor == null ? "—" :
+  new Intl.NumberFormat("en-GB", {style:"currency",currency:"GBP",maximumFractionDigits:2}).format(minor/100);
 const ns = "http://www.w3.org/2000/svg";
 async function read(url) {const r=await fetch(url);if(!r.ok)throw Error(url+" "+r.status);return r.json()}
 function svgEl(name, attrs={}) {const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));return el}
 let meta, card, prices, history=[], details={};
-let currency="GBP";
+
 const seriesInfo={
   eu:{index:1,label:"European low",uk:false},
   foil:{index:2,label:"European foil low",uk:false},
@@ -14,7 +14,7 @@ const seriesInfo={
   uk:{index:5,label:"Verified English UK offer",uk:true},
   ukfoil:{index:6,label:"Verified English UK foil offer",uk:true}
 };
-function fmtPrice(n){return money(n,currency)}
+function fmtPrice(n){return money(n)}
 function renderChart(){
   const config=seriesInfo[$("series").value], range=$("range").value;
   const end=new Date(meta.source_date+"T00:00:00Z");
@@ -26,9 +26,9 @@ function renderChart(){
   }).map(p=>{
     let n=p.values[config.index];
     if(n==null)return null;
-    if(!config.uk&&currency==="GBP"){
+    if(!config.uk){
       const rate=p.values[7];
-      if(rate==null)return null;
+      if(!Number.isFinite(rate)||rate<=0)return null;
       n=Math.round(n*rate/1000000);
     }
     return {date:p.date,value:n};
@@ -72,7 +72,7 @@ function renderChart(){
   svg.append(svgEl("circle",{cx:xp(endP.date),cy:yp(endP.value),r:5,fill:"#f2f6ff"}));
   container.append(svg);
   $("chart-subtitle").textContent=config.label+" · "+converted.length+" daily observations · "+fmtPrice(endP.value)+" on "+endP.date;
-  $("axis-note").textContent=config.uk?"Recorded UK seller offers (GBP figures can use indicative EUR/GBP conversion). Excludes shipping and fees.":"Europe-wide reference price in "+currency+(currency==="GBP"?" converted at each day's reference EUR/GBP rate.":" (GBP FX data unavailable).");
+  $("axis-note").textContent=config.uk?"Recorded UK seller offers in GBP; excludes shipping and fees.":"All chart prices in GBP (£), using each observation day’s EUR-to-GBP reference rate. Europe-wide guide, not UK shop quotes.";
 }
 function updateHeadline(){
  const uk=prices[4],low=prices[0],trend=prices[2],rate=meta.eur_to_gbp;
@@ -84,11 +84,11 @@ function updateHeadline(){
  $("uk-foil-note").textContent=prices[5]!=null?"Lowest observed UK English foil offer. "+(foilDetail.converted?"EUR amount converted to indicative GBP. ":"")+"Shipping and fees excluded.":"No matching UK English foil offer recorded.";
  const foilBuy=$("uk-foil-buy");foilBuy.hidden=!(prices[5]!=null&&foilDetail.url);if(foilDetail.url){foilBuy.href=foilDetail.url;foilBuy.textContent=foilDetail.source==="CardTrader"?"Browse this foil on CardTrader ↗":"View "+(foilDetail.seller||"seller")+" foil offer ↗"}
  const buy=$("uk-buy");buy.hidden=!(uk!=null&&normal.url);if(normal.url){buy.href=normal.url;buy.textContent=normal.source==="CardTrader"?"Browse this printing on CardTrader ↗":"View "+(normal.seller||"UK seller")+" offer ↗"}
- const euShow=n=>n==null?"—":rate?money(Math.round(n*rate))+" approx.":money(n,"EUR");
+ const euShow=n=>n==null?"—":money(Math.round(n*rate));
  $("eu-price").textContent=euShow(low);
  $("eu-foil-price").textContent=euShow(prices[1]);
  $("trend-price").textContent=euShow(trend);
- $("eu-note").textContent=low==null?"No EU low-price observation available.":rate?"Converted from "+money(low,"EUR")+" at EUR/GBP "+rate+"; NOT a UK offer.":"EU-wide lowest ask; listing language and seller country not filtered.";
+ $("eu-note").textContent=low==null?"No European guide price available.":"GBP estimate at reference exchange rate "+rate+"; Europe-wide, not a verified UK seller offer.";
 }
 (async()=>{
  try{
@@ -104,8 +104,8 @@ function updateHeadline(){
  $("details").textContent="Cardmarket product #"+card[0]+" · "+card[2]+(card[3]?" · collector #"+card[3]:"")+(card[4]?" · "+card[4]:"");
  $("marketplace-link").href="https://www.cardmarket.com/en/Magic/Products?idProduct="+encodeURIComponent(String(card[0]));
  $("uk-marketplace").href="https://www.cardmarket.com/en/Magic/Products?idProduct="+encodeURIComponent(String(card[0]))+"&language=1&sellerCountry=13";
- $("freshness").textContent="Cardmarket reference: "+meta.source_date+". Imported: "+new Date(meta.updated_at).toLocaleString("en-GB")+". GBP reference FX: "+(meta.fx_date||"not available")+". UK quotes recorded: "+(meta.verified_uk_offers||0)+".";
- currency=meta.eur_to_gbp?"GBP":"EUR";
+ $("freshness").textContent="Cardmarket reference: "+meta.source_date+". Imported: "+new Date(meta.updated_at).toLocaleString("en-GB")+". Converted to GBP using "+(meta.fx_stale?"the last available ":"")+"EUR/GBP reference exchange rate dated "+(meta.fx_date||"unknown")+". This is an estimate, not a UK seller price.";
+ if(!Number.isFinite(Number(meta.eur_to_gbp))||Number(meta.eur_to_gbp)<=0)throw Error("GBP exchange rate unavailable");
  updateHeadline();
  const shard=String(Number(id)%meta.shards).padStart(2,"0");
  const months=meta.months||[];
