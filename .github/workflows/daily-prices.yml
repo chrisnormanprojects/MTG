@@ -1,4 +1,4 @@
-name: Daily MTG prices and Pages
+name: Daily MTG price data
 
 on:
   schedule:
@@ -21,15 +21,10 @@ concurrency:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  update-and-publish:
+  update-prices:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     timeout-minutes: 20
     steps:
       - name: Check out repository
@@ -67,17 +62,7 @@ jobs:
               fi
             done
           fi
-      - name: Assemble static site
-        run: |
-          mkdir -p public
-          cp index.html card.html .nojekyll public/
-          cp -R assets data public/
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-      - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-      - name: Deploy GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+
+      # GitHub Pages is already configured to deploy the main branch.
+      # Committing new data starts its native Pages build automatically.
+      # Do not run deploy-pages here as it competes with that native build.
