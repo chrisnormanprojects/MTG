@@ -55,7 +55,9 @@ jobs:
             git commit -m "data: refresh MTG price observations"
             for attempt in 1 2 3; do
               git fetch origin main
-              git rebase origin/main
+              # A newer run may have updated today's meta.json.
+              # On a rebase, 'theirs' is this run's newly collected data.
+              git rebase -X theirs origin/main
               if git push; then
                 break
               fi
