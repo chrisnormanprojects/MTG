@@ -49,11 +49,13 @@ def listing_rows(groups, blueprint_map, rate):
                     or offer.get("on_vacation") is not False
                     or offer.get("graded") is not False
                     or type(offer.get("quantity")) is not int or offer["quantity"] < 1
-                    or type(offer.get("bundle_size")) is not int or offer["bundle_size"] != 1
+                    or type(offer.get("bundle_size", offer.get("bundled_quantity"))) is not int
+                    or offer.get("bundle_size", offer.get("bundled_quantity")) != 1
                     or type(props.get("mtg_foil")) is not bool):
                 continue
             price = offer.get("price") or {}
-            minor, currency = price.get("cents"), price.get("currency")
+            minor = price.get("cents", offer.get("price_cents"))
+            currency = price.get("currency", offer.get("price_currency"))
             if type(minor) is not int or minor <= 0:
                 continue
             if currency == "GBP":
