@@ -1,0 +1,67 @@
+name: Daily MTG prices and Pages
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-prices.yml'
+      - 'scripts/**'
+      - 'assets/**'
+      - '*.html'
+      - 'data/uk_offers.csv'
+      - 'README.md'
+
+concurrency:
+  group: mtg-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run importer tests
+        run: python -m unittest discover -s tests -v
+      - name: Fetch daily public prices and merge verified UK offers
+        env:
+          UK_OFFERS_CSV_URL: ${{ secrets.UK_OFFERS_CSV_URL }}
+        run: python scripts/update_prices.py
+      - name: Commit dated price observations
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/catalog.json data/latest.json data/meta.json data/uk_links.json data/history/
+          if ! git diff --cached --quiet; then
+            git commit -m "data: refresh MTG price observations"
+            git push
+          fi
+      - name: Assemble static site
+        run: |
+          mkdir -p public
+          cp index.html card.html .nojekyll public/
+          cp -R assets data public/
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
