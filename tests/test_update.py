@@ -90,5 +90,20 @@ class TestPriceImport(unittest.TestCase):
         self.assertEqual(links[("1234", "foil")]["converted"], True)
 
 
+    def test_cardtrader_flat_price_shape(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+        import cardtrader_uk
+        rows = {"777": [{
+            "id": 88, "user": {"country_code": "GB", "username": "UK Shop"},
+            "properties_hash": {"mtg_language": "en", "mtg_foil": False},
+            "quantity": 1, "graded": False, "on_vacation": False,
+            "bundled_quantity": 1, "price_cents": 230, "price_currency": "EUR"
+        }]}
+        best, links = cardtrader_uk.listing_rows(rows, {"777": "1234"}, 0.84)
+        self.assertEqual(best[("1234", "normal")], 193)
+        self.assertEqual(links[("1234", "normal")]["converted"], True)
+
+
 if __name__ == "__main__":
     unittest.main()
