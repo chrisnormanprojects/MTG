@@ -53,7 +53,17 @@ jobs:
           git add -A data
           if ! git diff --cached --quiet; then
             git commit -m "data: refresh MTG price observations"
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "Could not push updated price snapshots after three attempts" >&2
+                exit 1
+              fi
+            done
           fi
       - name: Assemble static site
         run: |
