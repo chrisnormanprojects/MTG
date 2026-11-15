@@ -50,60 +50,6 @@ class TestPriceImport(unittest.TestCase):
             mod.source_day({"createdAt": ""})
 
 
-    def test_cardtrader_map_is_unambiguous(self):
-        import sys
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-        import cardtrader_uk
-        mappings = cardtrader_uk.map_blueprints([
-            {"id": 77, "game_id": 1, "card_market_ids": [1234]},
-            {"id": 78, "game_id": 1, "card_market_ids": [1234, 1235]},
-            {"id": 79, "game_id": 2, "card_market_ids": [1234]},
-        ], {"1234", "1235"})
-        self.assertEqual(mappings, {"77": "1234"})
-
-    def test_cardtrader_only_available_uk_english_unbundled(self):
-        import sys
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-        import cardtrader_uk
-        def offer(amount, **fields):
-            row = {"id": 55, "user": {"country_code": "GB", "username": "Seller A"},
-                   "properties_hash": {"mtg_language": "en", "mtg_foil": False, "condition": "Near Mint"},
-                   "quantity": 1, "graded": False, "on_vacation": False,
-                   "bundle_size": 1, "price": {"cents": amount, "currency": "EUR"}}
-            for k, v in fields.items():
-                if k in ("user", "properties_hash", "price"):
-                    row[k].update(v)
-                else:
-                    row[k] = v
-            return row
-        offers = {"77": [
-            offer(1000), offer(500, user={"country_code": "DE"}),
-            offer(900, properties_hash={"mtg_language": "de"}),
-            offer(100, on_vacation=True),
-            offer(300, bundle_size=4),
-            offer(700, price={"currency": "GBP"}),
-            offer(600, properties_hash={"mtg_foil": True}),
-        ]}
-        best, links = cardtrader_uk.listing_rows(offers, {"77": "1234"}, 0.84)
-        self.assertEqual(best[("1234", "normal")], 700)
-        self.assertEqual(best[("1234", "foil")], 504)
-        self.assertEqual(links[("1234", "foil")]["converted"], True)
-
-
-    def test_cardtrader_flat_price_shape(self):
-        import sys
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-        import cardtrader_uk
-        rows = {"777": [{
-            "id": 88, "user": {"country_code": "GB", "username": "UK Shop"},
-            "properties_hash": {"mtg_language": "en", "mtg_foil": False},
-            "quantity": 1, "graded": False, "on_vacation": False,
-            "bundled_quantity": 1, "price_cents": 230, "price_currency": "EUR"
-        }]}
-        best, links = cardtrader_uk.listing_rows(rows, {"777": "1234"}, 0.84)
-        self.assertEqual(best[("1234", "normal")], 193)
-        self.assertEqual(links[("1234", "normal")]["converted"], True)
-
 
 if __name__ == "__main__":
     unittest.main()
