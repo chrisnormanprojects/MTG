@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/daily-prices.yml'
       - 'scripts/**'
+      - 'tests/**'
       - 'assets/**'
       - '*.html'
       - 'data/uk_offers.csv'
