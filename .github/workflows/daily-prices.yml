@@ -26,6 +26,9 @@ permissions:
 jobs:
   update-and-publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     timeout-minutes: 20
     steps:
       - name: Check out repository
