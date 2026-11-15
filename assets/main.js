@@ -82,7 +82,12 @@ function addResult(card, container, sort) {
     secondary.append(cap, v);
     a.append(secondary);
   }
-  container.appendChild(a);
+  const wrap=document.createElement("div");wrap.className="result-wrap";
+  const live=document.createElement("a");live.className="market-link";live.target="_blank";live.rel="noopener noreferrer";
+  live.href="https://www.cardmarket.com/en/Magic/Products?idProduct="+encodeURIComponent(id)+"&language=1&sellerCountry=13";
+  live.textContent="View live English / UK seller offers ↗";
+  live.setAttribute("aria-label","View English copies from UK sellers for "+card[1]+" on Cardmarket");
+  wrap.append(a,live);container.appendChild(wrap);
 }
 function display() {
   const q = norm($("search").value.trim());
@@ -93,11 +98,11 @@ function display() {
   if (!q) {
     const el = document.createElement("div");
     el.className = "empty";
-    el.textContent = "Type a card name to see each printing, ordered by price from cheapest to most expensive.";
+    el.textContent = "Search to compare all printings cheapest first, then view filtered UK-English offers.";
     root.appendChild(el);
     return;
   }
-  const words = q.split(/\s+/).filter(Boolean), onlyUK = $("uk-only").checked;
+  const words = q.split(/\s+/).filter(Boolean), onlyUK = false;
   let found = catalogue.filter(c => {
     const n = norm(c[1]);
     return words.every(w => n.includes(w)) &&
@@ -126,7 +131,7 @@ function display() {
       : "No matching cards found.";
     root.appendChild(el);
   }
-  const suffix = sort === "eu" ? "Sorted by lowest EU guide figure, including foil where cheaper."
+  const suffix = sort === "eu" ? "Sorted by Europe-wide guide prices, including foil where cheaper. UK-English offers are shown live on Cardmarket."
     : sort === "uk" ? "UK quotes first, cheapest to most expensive. Missing UK quotes appear last."
     : "";
   $("more").textContent = found.length > cap
@@ -140,7 +145,7 @@ function display() {
       read("data/meta.json"), read("data/catalog.json"), read("data/latest.json")
     ]);
     $("status").textContent = "Daily guide: " + meta.source_date +
-      " · EU prices are estimates in GBP; UK quotes are separate";
+      " · GBP values are EU guide estimates; live UK-English offers open on Cardmarket";
     $("count").textContent = catalogue.length.toLocaleString("en-GB") + " printings";
     const q = new URLSearchParams(location.search).get("q");
     if (q) $("search").value = q;
@@ -151,7 +156,6 @@ function display() {
       timer = setTimeout(display, 130);
     });
     $("sort").addEventListener("change", display);
-    $("uk-only").addEventListener("change", display);
     document.addEventListener("keydown", e => {
       if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
         e.preventDefault();
