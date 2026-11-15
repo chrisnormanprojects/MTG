@@ -116,6 +116,12 @@ function addRows(){
   uk.href=marketplace(id);uk.target="_blank";uk.rel="noopener noreferrer";
   uk.setAttribute("aria-label","View English copies from UK sellers of "+chosen.name+" in "+c[2]+" on Cardmarket");
   marketTd.appendChild(uk);
+  // On iPhones, display the UK seller link below the printing name instead
+  // of squeezing it into a third table column.
+  const mobileUk=make("a","uk-compact mobile-uk-link","UK offers ↗");
+  mobileUk.href=uk.href;mobileUk.target="_blank";mobileUk.rel="noopener noreferrer";
+  mobileUk.setAttribute("aria-label",uk.getAttribute("aria-label"));
+  setTd.appendChild(mobileUk);
   tr.append(setTd,priceTd,marketTd);fragment.appendChild(tr);
  }
  tbody.append(fragment);shown=end;
