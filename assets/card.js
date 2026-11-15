@@ -19,7 +19,7 @@ function renderChart(){
   const config=seriesInfo[$("series").value], range=$("range").value;
   const end=new Date(meta.source_date+"T00:00:00Z");
   const days=range==="all"?Number.MAX_SAFE_INTEGER:Number(range);
-  const from=new Date(end.getTime()-(days-1)*86400000);
+  const from=range==="all"?new Date("1970-01-01T00:00:00Z"):new Date(end.getTime()-(days-1)*86400000);
   const converted=history.filter(p=>{
     const d=new Date(p.date+"T00:00:00Z");
     return d>=from&&d<=end;
