@@ -35,7 +35,7 @@ function renderChart(){
   }).filter(Boolean).sort((a,b)=>a.date.localeCompare(b.date));
   const container=$("chart");container.replaceChildren();
   if(!converted.length){container.classList.add("empty");container.textContent=config.uk?
-    "No verified UK price history yet. Connect a licensed UK seller feed to start tracking real UK prices.":
+    "No matching UK seller quotes recorded yet. An approved source is required; no missing prices are invented.":
     "No daily observations for this range yet. History begins with the first import.";
     $("chart-subtitle").textContent=config.label;$("axis-note").textContent="";return}
   container.classList.remove("empty");
@@ -72,14 +72,14 @@ function renderChart(){
   svg.append(svgEl("circle",{cx:xp(endP.date),cy:yp(endP.value),r:5,fill:"#f2f6ff"}));
   container.append(svg);
   $("chart-subtitle").textContent=config.label+" · "+converted.length+" daily observations · "+fmtPrice(endP.value)+" on "+endP.date;
-  $("axis-note").textContent=config.uk?"Actual quoted GBP price from a verified GB seller, excluding postage.":"Europe-wide reference price in "+currency+(currency==="GBP"?" converted at each day's reference EUR/GBP rate.":" (GBP FX data unavailable).");
+  $("axis-note").textContent=config.uk?"Recorded UK seller offers (GBP figures can use indicative EUR/GBP conversion). Excludes shipping and fees.":"Europe-wide reference price in "+currency+(currency==="GBP"?" converted at each day's reference EUR/GBP rate.":" (GBP FX data unavailable).");
 }
 function updateHeadline(){
  const uk=prices[4],low=prices[0],trend=prices[2],rate=meta.eur_to_gbp;
  $("uk-price").textContent=money(uk);
- $("uk-note").textContent=uk!=null?"Lowest available English-language offer from a GB seller. Postage not included.":"No verified English/UK seller source connected for this printing.";
+ $("uk-note").textContent=uk!=null?"Lowest observed English-language offer from a GB seller in connected sources; no claim of complete UK coverage. "+((details.normal||{}).converted?"Converted from EUR at the daily reference exchange rate. ":"")+"Shipping and fees excluded.":"No matching English-language UK seller quote was observed or connected for this printing.";
  const normal=details.normal||{};
- const buy=$("uk-buy");buy.hidden=!(uk!=null&&normal.url);if(normal.url){buy.href=normal.url;buy.textContent="View "+(normal.seller||"UK seller")+" offer ↗"}
+ const buy=$("uk-buy");buy.hidden=!(uk!=null&&normal.url);if(normal.url){buy.href=normal.url;buy.textContent=normal.source==="CardTrader"?"Browse this printing on CardTrader ↗":"View "+(normal.seller||"UK seller")+" offer ↗"}
  const euShow=n=>n==null?"—":rate?money(Math.round(n*rate))+" approx.":money(n,"EUR");
  $("eu-price").textContent=euShow(low);
  $("trend-price").textContent=euShow(trend);
