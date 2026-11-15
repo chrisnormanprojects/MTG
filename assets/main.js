@@ -84,7 +84,7 @@ function resetSearch(){
 function sortedPrintings(entry){
  const rows=[...entry.items],sort=$("sort").value;
  if(sort==="set")rows.sort((a,b)=>a[2].localeCompare(b[2],"en-GB")||String(a[3]).localeCompare(String(b[3]))||a[0]-b[0]);
- else rows.sort((a,b)=>(sort==="high"?euroRank(b)-euroRank(a):euroRank(a)-euroRank(b))||a[2].localeCompare(b[2],"en-GB")||a[0]-b[0]);
+ else rows.sort((a,b)=>{const x=euroRank(a),y=euroRank(b);if(!Number.isFinite(x)||!Number.isFinite(y)){if(!Number.isFinite(x)&&!Number.isFinite(y))return a[2].localeCompare(b[2],"en-GB");return Number.isFinite(x)?-1:1}return (sort==="high"?y-x:x-y)||a[2].localeCompare(b[2],"en-GB")||a[0]-b[0]});
  return rows;
 }
 function newTable(){
@@ -103,7 +103,7 @@ function addRows(){
   const c=currentResults[i],id=c[0],q=euQuote(id);
   const tr=document.createElement("tr");
   const setTd=document.createElement("td");
-  const detail=make("a","printing-name",c[2]||"Unknown set");detail.href="card.html?id="+encodeURIComponent(String(id));
+  const detail=make("a","printing-name",c[2]||"Unknown set");detail.href="card.html?id="+encodeURIComponent(String(id));detail.setAttribute("aria-label","View price history for "+chosen.name+", "+(c[2]||"unknown set"));
   setTd.appendChild(detail);
   if(c[3])setTd.appendChild(make("span","printing-number","#"+c[3]));
   const priceTd=make("td","amount");
@@ -126,7 +126,7 @@ function showTable(){
  if(!chosen){resetSearch();return}
  currentResults=sortedPrintings(chosen);shown=0;
  $("result-title").textContent=chosen.name;
- $("result-count").textContent=currentResults.length.toLocaleString("en-GB")+" printings · prices lowest first unless changed below";
+ $("result-count").textContent=currentResults.length.toLocaleString("en-GB")+" printings · "+({low:"cheapest first",high:"most expensive first",set:"set name A–Z"}[$("sort").value]||"cheapest first");
  $("results").replaceChildren(newTable());addRows();
 }
 function onInput(){
