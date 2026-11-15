@@ -19,7 +19,7 @@ The CardTrader integration has been removed; no API credentials are necessary fo
 
 ## Accuracy and price comparison
 
-Cardmarket's **public daily downloadable price guide** is a Europe-wide aggregate. It has no row-level seller country, card language, condition or shipping cost, and therefore **cannot be filtered into a genuine UK-only English-card price history**. Search results are sorted by the lowest European guide price (either regular or foil), and GBP values are indicative EUR-to-GBP conversions, **not** seller quotations. Clicking through to Cardmarket gives the live filtered offers; sorting on our site does **not** rank those offers.
+Cardmarket's **public daily downloadable price guide** is a Europe-wide aggregate. It has no row-level seller country, card language, condition or shipping cost, and therefore **cannot be filtered into a genuine UK-only English-card price history**. Search results are sorted by the lowest European guide price (either regular or foil), and **all search, printing and history prices on this website are shown in GBP (£)** using the reference rate for each day. These are approximate EUR-to-GBP conversions, **not** UK seller quotations. If the live FX service is unavailable, the importer uses the last valid rate and clearly marks it as older. Without any valid rate, it refuses to publish an update rather than switching back to euros. Clicking through to Cardmarket gives the live filtered offers; sorting on our site does **not** rank those offers.
 
 The importer still allows an optional independently authorised CSV offer feed (data/uk_offers.csv or the UK_OFFERS_CSV_URL secret). None is currently connected and the public UI does not claim UK-only prices in its chart.
 
