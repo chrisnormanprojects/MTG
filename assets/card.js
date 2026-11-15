@@ -102,7 +102,8 @@ function updateHeadline(){
  $("card-name").textContent=card[1];document.title=card[1]+" — MTG Price Radar";
  $("printing").textContent=[card[2],card[3]?"Collector #"+card[3]:"",card[4]].filter(Boolean).join(" · ");
  $("details").textContent="Cardmarket product #"+card[0]+" · "+card[2]+(card[3]?" · collector #"+card[3]:"")+(card[4]?" · "+card[4]:"");
- $("marketplace-link").href="https://www.cardmarket.com/en/Magic/Products/Search?searchString="+encodeURIComponent(card[1]);
+ $("marketplace-link").href="https://www.cardmarket.com/en/Magic/Products?idProduct="+encodeURIComponent(String(card[0]));
+ $("uk-marketplace").href="https://www.cardmarket.com/en/Magic/Products?idProduct="+encodeURIComponent(String(card[0]))+"&language=1&sellerCountry=13";
  $("freshness").textContent="Cardmarket reference: "+meta.source_date+". Imported: "+new Date(meta.updated_at).toLocaleString("en-GB")+". GBP reference FX: "+(meta.fx_date||"not available")+". UK quotes recorded: "+(meta.verified_uk_offers||0)+".";
  currency=meta.eur_to_gbp?"GBP":"EUR";
  updateHeadline();
