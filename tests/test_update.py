@@ -65,11 +65,11 @@ class TestPriceImport(unittest.TestCase):
         import sys
         sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
         import cardtrader_uk
-        def offer(price, **fields):
+        def offer(amount, **fields):
             row = {"id": 55, "user": {"country_code": "GB", "username": "Seller A"},
                    "properties_hash": {"mtg_language": "en", "mtg_foil": False, "condition": "Near Mint"},
                    "quantity": 1, "graded": False, "on_vacation": False,
-                   "bundle_size": 1, "price": {"cents": price, "currency": "EUR"}}
+                   "bundle_size": 1, "price": {"cents": amount, "currency": "EUR"}}
             for k, v in fields.items():
                 if k in ("user", "properties_hash", "price"):
                     row[k].update(v)
