@@ -51,5 +51,32 @@ class TestPriceImport(unittest.TestCase):
 
 
 
+    def test_gbp_rate_prefers_live_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(mod, "DATA", Path(tmp)):
+                result = mod.valid_gbp_rate({"rate": 0.83546, "date": "2026-11-15"})
+                self.assertEqual(result["rate"], 0.83546)
+                self.assertFalse(result["fx_stale"])
+
+    def test_gbp_rate_uses_prior_valid_rate_when_fx_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = Path(tmp)
+            (data / "meta.json").write_text(
+                '{"eur_to_gbp":0.82,"fx_date":"2026-11-14"}', encoding="utf-8"
+            )
+            with patch.object(mod, "DATA", data):
+                result = mod.valid_gbp_rate(None)
+                self.assertEqual(result["rate"], 0.82)
+                self.assertEqual(result["date"], "2026-11-14")
+                self.assertTrue(result["fx_stale"])
+
+    def test_never_publish_euro_fallback_as_gbp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(mod, "DATA", Path(tmp)):
+                with self.assertRaisesRegex(ValueError, "No valid EUR/GBP rate"):
+                    mod.valid_gbp_rate(None)
+
+
+
 if __name__ == "__main__":
     unittest.main()
