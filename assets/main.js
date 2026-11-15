@@ -1,7 +1,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const norm=s=>String(s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").trim().toLocaleLowerCase("en-GB");
-const money=(n,c="GBP")=>new Intl.NumberFormat("en-GB",{style:"currency",currency:c,maximumFractionDigits:2}).format(n/100);
+const money=n=>new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:2}).format(n/100);
 let catalogue=[],prices={},meta={},names=[],printings=new Map(),searchNames=[],chosen=null;
 let suggestions=[],highlighted=-1,shown=0,currentResults=[];
 const STEP=50;
@@ -90,7 +90,7 @@ function sortedPrintings(entry){
 function newTable(){
  const table=make("table","price-table");table.setAttribute("aria-label",chosen.name+" printings and European guide prices");
  const thead=document.createElement("thead"),row=document.createElement("tr");
- for(const [title,cls] of [["Printing","col-print"],["Guide price","col-price"],["UK sellers","col-uk"]]){
+ for(const [title,cls] of [["Printing","col-print"],["GBP estimate","col-price"],["UK sellers","col-uk"]]){
   const th=make("th",cls,title);th.scope="col";row.appendChild(th);
  }
  thead.appendChild(row);table.appendChild(thead);
@@ -108,7 +108,7 @@ function addRows(){
   if(c[3])setTd.appendChild(make("span","printing-number","#"+c[3]));
   const priceTd=make("td","amount");
   if(q){
-   priceTd.appendChild(make("strong","price-value",meta.eur_to_gbp?money(Math.round(q.value*meta.eur_to_gbp))+" ≈":money(q.value,"EUR")));
+   priceTd.appendChild(make("strong","price-value",money(Math.round(q.value*meta.eur_to_gbp))));
    priceTd.appendChild(make("span","finish-label",q.finish));
   }else priceTd.appendChild(make("span","no-price","—"));
   const marketTd=document.createElement("td");marketTd.className="uk-cell";
@@ -143,8 +143,9 @@ function onInput(){
 (async()=>{
  try{
   [meta,catalogue,prices]=await Promise.all([read("data/meta.json"),read("data/catalog.json"),read("data/latest.json")]);
+  if(!Number.isFinite(Number(meta.eur_to_gbp))||Number(meta.eur_to_gbp)<=0)throw Error("GBP exchange rate unavailable");
   indexCards();
-  $("status").textContent="Guide: "+meta.source_date+" · approximate GBP";
+  $("status").textContent="Guide: "+meta.source_date+" · GBP estimates"+(meta.fx_stale?" · last available FX rate":"");
   $("count").textContent=names.length.toLocaleString("en-GB")+" card names";
   const initial=new URLSearchParams(location.search).get("q");
   if(initial){$("search").value=initial;const item=printings.get(norm(initial));if(item){chosen=item;showTable()}else{resetSearch();drawSuggestions()}}
