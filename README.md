@@ -25,7 +25,7 @@ The importer still allows an optional independently authorised CSV offer feed (d
 
 ## Daily updates
 
-The GitHub Actions workflow at `.github/workflows/daily-prices.yml` is scheduled daily at **06:23 UTC** and can be started manually. It imports the official Cardmarket product catalogue and price guide, a Frankfurter EUR/GBP reference exchange rate, stores per-printing observations as compact monthly shards under `data/history/`, commits the new data and deploys GitHub Pages.
+The GitHub Actions workflow at `.github/workflows/daily-prices.yml` is scheduled daily at **06:23 UTC** and can be started manually. It imports the official Cardmarket product catalogue and price guide, a Frankfurter EUR/GBP reference exchange rate, stores per-printing observations as compact monthly shards under `data/history/` and commits new data to `main`. GitHub Pages then automatically publishes that branch through its built-in deployment workflow. The custom price-import action does not deploy Pages separately, avoiding competing deployments.
 
 The database history starts from the first successful import; no earlier prices are fabricated.
 
