@@ -60,3 +60,5 @@
 .uk-compact{font-size:11px}
 .suggestion{font-size:13px;padding:12px}
 }
+
+.load-more[hidden]{display:none}
