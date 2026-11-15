@@ -219,6 +219,7 @@ def import_data(catalog_source, guide_source, rate=None, uk_best=None, uk_links=
         "verified_uk_offers": len(uk_best),
         "fx_date": rate.get("date") if rate else None,
         "eur_to_gbp": fx_rate,
+        "fx_stale": bool(rate.get("fx_stale", False)) if rate else False,
         "months": months,
         "shards": SHARDS,
         "reference": "Cardmarket daily EU-wide low (any language, any condition)",
@@ -228,14 +229,48 @@ def import_data(catalog_source, guide_source, rate=None, uk_best=None, uk_links=
           f"{len(uk_best):,} qualifying UK offers; source {day}")
 
 
+def valid_gbp_rate(response):
+    """Require a verified rate for every day so the website never falls back to euros.
+
+    When the FX service is temporarily unavailable, reuse the last successful
+    GBP reference rate with its original date, clearly marked as a fallback.
+    """
+    if isinstance(response, dict):
+        try:
+            value = Decimal(str(response.get("rate")))
+            if value.is_finite() and Decimal("0.1") < value < Decimal("2"):
+                return {
+                    "rate": float(value),
+                    "date": response.get("date"),
+                    "fx_stale": False,
+                }
+        except (InvalidOperation, ValueError, TypeError):
+            pass
+    previous = read_json(DATA / "meta.json", {})
+    try:
+        value = Decimal(str(previous.get("eur_to_gbp")))
+        if value.is_finite() and Decimal("0.1") < value < Decimal("2"):
+            return {
+                "rate": float(value),
+                "date": previous.get("fx_date"),
+                "fx_stale": True,
+            }
+    except (InvalidOperation, ValueError, TypeError):
+        pass
+    raise ValueError("No valid EUR/GBP rate is available. Refusing to publish euro prices as GBP.")
+
+
 def main():
     catalogue = load_json(CATALOG_URL)
     guide = load_json(PRICES_URL)
     try:
-        rate = load_json(FX_URL)
+        raw_rate = load_json(FX_URL)
     except Exception as exc:
-        print(f"FX source unavailable; displaying EUR only ({exc})")
-        rate = None
+        print(f"FX source unavailable: {exc}. Checking previous GBP rate.")
+        raw_rate = None
+    rate = valid_gbp_rate(raw_rate)
+    if rate["fx_stale"]:
+        print("Using last known EUR/GBP rate from " + str(rate.get("date")))
     offers, links = verified_uk_offers()
     import_data(catalogue, guide, rate=rate, uk_best=offers, uk_links=links)
 
