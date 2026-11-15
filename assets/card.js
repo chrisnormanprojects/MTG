@@ -77,11 +77,16 @@ function renderChart(){
 function updateHeadline(){
  const uk=prices[4],low=prices[0],trend=prices[2],rate=meta.eur_to_gbp;
  $("uk-price").textContent=money(uk);
+ $("uk-foil-price").textContent=money(prices[5]);
  $("uk-note").textContent=uk!=null?"Lowest observed English-language offer from a GB seller in connected sources; no claim of complete UK coverage. "+((details.normal||{}).converted?"Converted from EUR at the daily reference exchange rate. ":"")+"Shipping and fees excluded.":"No matching English-language UK seller quote was observed or connected for this printing.";
  const normal=details.normal||{};
+ const foilDetail=details.foil||{};
+ $("uk-foil-note").textContent=prices[5]!=null?"Lowest observed UK English foil offer. "+(foilDetail.converted?"EUR amount converted to indicative GBP. ":"")+"Shipping and fees excluded.":"No matching UK English foil offer recorded.";
+ const foilBuy=$("uk-foil-buy");foilBuy.hidden=!(prices[5]!=null&&foilDetail.url);if(foilDetail.url){foilBuy.href=foilDetail.url;foilBuy.textContent=foilDetail.source==="CardTrader"?"Browse this foil on CardTrader ↗":"View "+(foilDetail.seller||"seller")+" foil offer ↗"}
  const buy=$("uk-buy");buy.hidden=!(uk!=null&&normal.url);if(normal.url){buy.href=normal.url;buy.textContent=normal.source==="CardTrader"?"Browse this printing on CardTrader ↗":"View "+(normal.seller||"UK seller")+" offer ↗"}
  const euShow=n=>n==null?"—":rate?money(Math.round(n*rate))+" approx.":money(n,"EUR");
  $("eu-price").textContent=euShow(low);
+ $("eu-foil-price").textContent=euShow(prices[1]);
  $("trend-price").textContent=euShow(trend);
  $("eu-note").textContent=low==null?"No EU low-price observation available.":rate?"Converted from "+money(low,"EUR")+" at EUR/GBP "+rate+"; NOT a UK offer.":"EU-wide lowest ask; listing language and seller country not filtered.";
 }
