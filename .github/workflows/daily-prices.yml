@@ -30,7 +30,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    timeout-minutes: 75
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -45,8 +45,6 @@ jobs:
       - name: Fetch daily public prices and merge verified UK offers
         env:
           UK_OFFERS_CSV_URL: ${{ secrets.UK_OFFERS_CSV_URL }}
-          CARDTRADER_API_TOKEN: ${{ secrets.CARDTRADER_API_TOKEN }}
-          CARDTRADER_MARKET_API_APPROVED: ${{ vars.CARDTRADER_MARKET_API_APPROVED }}
         run: python scripts/update_prices.py
       - name: Commit dated price observations
         run: |
